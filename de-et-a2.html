@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Les prépositions DE et À - Jeu FLE</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef, useEffect } = React;
+
+        // Icônes
+        const Star = () => (
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+        );
+
+        const Trophy = ({ size = 16 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+                <path d="M7 3v2H4v4c0 2.21 1.79 4 4 4v1c0 2.21 1.79 4 4 4s4-1.79 4-4v-1c2.21 0 4-1.79 4-4V5h-3V3H7zM6 7h2v2c-1.1 0-2-.9-2-2zm10 6v1c0 1.1-.9 2-2 2s-2-.9-2-2v-1h4zm2-4c-1.1 0-2-.9-2-2V7h2v2z"/>
+                <path d="M7 19h10v2H7z"/>
+            </svg>
+        );
+
+        const RotateCcw = ({ size = 20 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M1 4v6h6M23 20v-6h-6"/>
+                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+            </svg>
+        );
+
+        const Sparkles = () => (
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0l1.545 4.455L18 6l-4.455 1.545L12 12l-1.545-4.455L6 6l4.455-1.545L12 0zM6 12l.909 2.636L9.545 15.5l-2.636.909L6 19l-.909-2.636L2.455 15.5l2.636-.909L6 12zm12 0l.909 2.636L21.545 15.5l-2.636.909L18 19l-.909-2.636L14.455 15.5l2.636-.909L18 12z"/>
+            </svg>
+        );
+
+        const Lock = () => (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+            </svg>
+        );
+
+        // Jeu 1
+        const Exercise1 = ({ totalPoints, setTotalPoints, onComplete, badges, setBadges, onGameComplete }) => {
+            const sentences = [
+                { words: ['J\'ai', 'hâte', 'de', 'te', 'revoir', '.'], correct: 'J\'ai hâte de te revoir .' },
+                { words: ['Je', 'suis', 'contente', 'd\'', 'apprendre', 'le', 'français', '.'], correct: 'Je suis contente d\' apprendre le français .' },
+                { words: ['Il', 'est', 'possible', 'de', 'faire', 'du', 'vélo', '.'], correct: 'Il est possible de faire du vélo .' },
+                { words: ['C\'est', 'la', 'place', 'de', 'mon', 'voisin', '.'], correct: 'C\'est la place de mon voisin .' },
+                { words: ['J\'ai', 'besoin', 'd\'', 'un', 'peu', 'de', 'repos', '.'], correct: 'J\'ai besoin d\' un peu de repos .' },
+                { words: ['Je', 'suis', 'heureuse', 'd\'', 'être', 'ici', '.'], correct: 'Je suis heureuse d\' être ici .' },
+                { words: ['Une', 'maison', 'au', 'bord', 'de', 'la', 'mer', '.'], correct: 'Une maison au bord de la mer .' },
+                { words: ['L\'emplacement', 'de', 'ce', 'parc', 'est', 'magnifique', '.'], correct: 'L\'emplacement de ce parc est magnifique .' },
+                { words: ['J\'ai', 'envie', 'de', 'partir', 'en', 'vacances', '.'], correct: 'J\'ai envie de partir en vacances .' },
+                { words: ['Je', 'suis', 'content', 'de', 'travailler', 'avec', 'toi', '.'], correct: 'Je suis content de travailler avec toi .' }
+            ];
+
+            const [currentSentence, setCurrentSentence] = useState(0);
+            const [selectedWords, setSelectedWords] = useState([]);
+            const [availableWords, setAvailableWords] = useState([...sentences[0].words].sort(() => Math.random() - 0.5));
+            const [feedback, setFeedback] = useState('');
+            const [score, setScore] = useState(0);
+            const [errors, setErrors] = useState(0);
+            const [showContinue, setShowContinue] = useState(false);
+            const [showAnimation, setShowAnimation] = useState(false);
+            const [isComplete, setIsComplete] = useState(false);
+
+            const handleWordClick = (word, index) => {
+                setSelectedWords([...selectedWords, word]);
+                setAvailableWords(availableWords.filter((_, i) => i !== index));
+                setFeedback('');
+            };
+
+            const handleRemoveWord = (index) => {
+                const word = selectedWords[index];
+                setAvailableWords([...availableWords, word]);
+                setSelectedWords(selectedWords.filter((_, i) => i !== index));
+            };
+
+            const checkAnswer = () => {
+                const userAnswer = selectedWords.join(' ');
+                const isCorrect = userAnswer === sentences[currentSentence].correct;
+                
+                if (isCorrect) {
+                    setFeedback('correct');
+                    setScore(score + 1);
+                    setTotalPoints(totalPoints + 10);
+                    setShowAnimation(true);
+                    setShowContinue(true);
+                    setTimeout(() => setShowAnimation(false), 1000);
+                } else {
+                    setFeedback('incorrect');
+                    setErrors(errors + 1);
+                }
+            };
+
+            const continueToNext = () => {
+                setShowContinue(false);
+                setShowAnimation(false);
+                setFeedback('');
+                
+                if (currentSentence < sentences.length - 1) {
+                    const nextIndex = currentSentence + 1;
+                    setCurrentSentence(nextIndex);
+                    setSelectedWords([]);
+                    setAvailableWords([...sentences[nextIndex].words].sort(() => Math.random() - 0.5));
+                } else {
+                    if (!badges.includes('Débutant')) {
+                        setBadges([...badges, 'Débutant']);
+                    }
+                    setIsComplete(true);
+                }
+            };
+
+            const resetSentence = () => {
+                setSelectedWords([]);
+                setAvailableWords([...sentences[currentSentence].words].sort(() => Math.random() - 0.5));
+                setFeedback('');
+            };
+
+            const resetExercise = () => {
+                setCurrentSentence(0);
+                setSelectedWords([]);
+                setAvailableWords([...sentences[0].words].sort(() => Math.random() - 0.5));
+                setFeedback('');
+                setScore(0);
+                setErrors(0);
+                setShowContinue(false);
+                setShowAnimation(false);
+                setIsComplete(false);
+            };
+
+            if (isComplete) {
+                const successRate = (score / sentences.length) * 100;
+                const canProgress = successRate >= 80;
+
+                return (
+                    <div className="text-center space-y-6">
+                        <div className="text-6xl mb-4">🎉</div>
+                        <h2 className="text-4xl font-bold text-gray-800">Bravo !</h2>
+                        <p className="text-2xl text-gray-600">Jeu 1 terminé !</p>
+                        <div className="text-5xl font-bold text-blue-600">{score}/{sentences.length}</div>
+                        <div className="text-3xl font-bold text-purple-600">{successRate.toFixed(0)}%</div>
+                        
+                        <div className="bg-gray-100 p-4 rounded-lg">
+                            <p className="text-xl text-gray-700">
+                                Nombre d'erreurs : <span className={`font-bold ${errors > 0 ? 'text-red-600' : 'text-green-600'}`}>{errors}</span>
+                            </p>
+                        </div>
+
+                        {!canProgress ? (
+                            <div className="space-y-4">
+                                <p className="text-lg text-red-600 font-bold">
+                                    Tu dois obtenir au moins 80% de bonnes réponses pour débloquer le jeu suivant.
+                                </p>
+                                <p className="text-lg text-gray-600">
+                                    Refais le jeu pour améliorer ton score !
+                                </p>
+                                <button onClick={resetExercise} className="px-8 py-4 bg-blue-500 text-white text-xl font-bold rounded-lg hover:bg-blue-600 transition flex items-center gap-2 mx-auto">
+                                    <RotateCcw size={24} /> Refaire le jeu
+                                </button>
+                            </div>
+                        ) : errors > 0 ? (
+                            <div className="space-y-4">
+                                <p className="text-lg text-gray-600">
+                                    Tu peux t'améliorer ! Refais le jeu pour obtenir un meilleur score.
+                                </p>
+                                <button onClick={resetExercise} className="px-8 py-4 bg-blue-500 text-white text-xl font-bold rounded-lg hover:bg-blue-600 transition flex items-center gap-2 mx-auto">
+                                    <RotateCcw size={24} /> Refaire le jeu
+                                </button>
+                                <button onClick={() => { onGameComplete(1, canProgress); onComplete(2); }} className="px-8 py-4 bg-purple-500 text-white text-xl font-bold rounded-lg hover:bg-purple-600 transition">
+                                    Passer au jeu 2 →
+                                </button>
+                            </div>
+                        ) : (
+                            <button onClick={() => { onGameComplete(1, canProgress); onComplete(2); }} className="px-8 py-4 bg-purple-500 text-white text-xl font-bold rounded-lg hover:bg-purple-600 transition">
+                                Passer au jeu 2 →
+                            </button>
+                        )}
+                    </div>
+                );
+            }
+
+            return (
+                <div className="space-y-6">
+                    <div className="text-center">
+                        <p className="text-lg font-semibold text-gray-700">Phrase {currentSentence + 1}/{sentences.length}</p>
+                    </div>
+
+                    <div className="bg-blue-50 p-6 rounded-lg min-h-24 flex flex-wrap gap-2 items-center justify-center">
+                        {selectedWords.map((word, index) => (
+                            <button key={index} onClick={() => handleRemoveWord(index)} className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+                                {word}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 justify-center">
+                        {availableWords.map((word, index) => (
+                            <button key={index} onClick={() => handleWordClick(word, index)} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">
+                                {word}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="flex gap-4 justify-center">
+                        <button onClick={checkAnswer} disabled={selectedWords.length === 0 || showContinue} className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition">
+                            Vérifier
+                        </button>
+                        <button onClick={resetSentence} disabled={showContinue} className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition flex items-center gap-2">
+                            <RotateCcw size={20} /> Recommencer
+                        </button>
+                    </div>
+
+                    {showContinue && (
+                        <div className="text-center space-y-4 relative">
+                            {showAnimation && (
+                                <div className="absolute -top-20 left-1/2 transform -translate-x-1/2">
+                                    <div className="text-7xl animate-bounce">🎊</div>
+                                </div>
+                            )}
+                            <div className="text-green-600 font-bold text-xl">✓ Excellent ! +10 points</div>
+                            <button onClick={continueToNext} className="px-8 py-4 bg-blue-500 text-white text-xl font-bold rounded-lg hover:bg-blue-600 transition">
+                                Continuer →
+                            </button>
+                        </div>
+                    )}
+
+                    {feedback === 'incorrect' && (
+                        <div className="text-center text-red-600 font-bold text-xl">✗ Essaie encore !</div>
+                    )}
+                </div>
+            );
+        };
+
+        // Jeu 2
+        const Exercise2 = ({ totalPoints, setTotalPoints, onComplete, badges, setBadges, onGameComplete }) => {
+            const sentences = [
+                { text: 'Je suis heureuse ___ apprendre avec toi.', answer: 'd\'', options: ['de', 'd\'', 'à', 'au', 'à la'] },
+                { text: 'Un appartement ___ bord ___ mer', answer: 'au', options: ['de', 'de la', 'd\'', 'à', 'au', 'à la'], secondAnswer: 'de la' },
+                { text: 'Il est facile ___ comprendre cette leçon.', answer: 'de', options: ['de', 'd\'', 'à', 'au', 'à la'] },
+                { text: 'J\'ai l\'intention ___ venir ___ fête.', answer: 'de', options: ['de', 'd\'', 'à', 'au', 'à la'], secondAnswer: 'à la' },
+                { text: 'Dans l\'attente ___ ta réponse', answer: 'de', options: ['de', 'd\'', 'à', 'au', 'à la'] },
+                { text: 'L\'accès ___ musée est gratuit.', answer: 'au', options: ['de', 'd\'', 'à', 'au', 'à la'] },
+                { text: 'Je commence ___ comprendre la grammaire.', answer: 'à', options: ['de', 'd\'', 'à', 'au', 'à la'] },
+                { text: 'Une chambre ___ montagne avec vue', answer: 'à la', options: ['de', 'd\'', 'à', 'au', 'à la'] },
+                { text: 'J\'ai hâte ___ partir ___ plage.', answer: 'de', options: ['de', 'd\'', 'à', 'au', 'à la'], secondAnswer: 'à la' },
+                { text: 'Le prix ___ formation est raisonnable.', answer: 'de la', options: ['de', 'de la', 'd\'', 'à', 'au', 'à la'] },
+                { text: 'Je suis prête ___ faire l\'exercice.', answer: 'à', options: ['de', 'd\'', 'à', 'au', 'à la'] },
+                { text: 'L\'emplacement ___ école est pratique.', answer: 'de l\'', options: ['de', 'de l\'', 'd\'', 'à', 'au', 'à la'] }
+            ];
+
+            const [currentQuestion, setCurrentQuestion] = useState(0);
+            const [userAnswers, setUserAnswers] = useState([]);
+            const [feedback, setFeedback] = useState('');
+            const [score, setScore] = useState(0);
+            const [errors, setErrors] = useState(0);
+            const [showContinue, setShowContinue] = useState(false);
+            const [showAnimation, setShowAnimation] = useState(false);
+            const [isComplete, setIsComplete] = useState(false);
+
+            useEffect(() => {
+                const handleKeyPress = (e) => {
+                    if (e.key === 'Enter' && showContinue) {
+                        continueToNext();
+                    }
+                };
+                window.addEventListener('keypress', handleKeyPress);
+                return () => window.removeEventListener('keypress', handleKeyPress);
+            }, [showContinue]);
+
+            const handleAnswer = (answer) => {
+                const current = sentences[currentQuestion];
+                const newAnswers = [...userAnswers, answer];
+                setUserAnswers(newAnswers);
+
+                if (current.secondAnswer && newAnswers.length === 1) return;
+
+                const isCorrect = current.secondAnswer 
+                    ? newAnswers[0] === current.answer && newAnswers[1] === current.secondAnswer
+                    : answer === current.answer;
+
+                if (isCorrect) {
+                    setFeedback('correct');
+                    setScore(score + 1);
+                    setTotalPoints(totalPoints + 15);
+                    setShowAnimation(true);
+                    setShowContinue(true);
+                    setTimeout(() => setShowAnimation(false), 1000);
+                } else {
+                    setFeedback('incorrect');
+                    setErrors(errors + 1);
+                    setTimeout(() => {
+                        setUserAnswers([]);
+                        setFeedback('');
+                    }, 1500);
+                }
+            };
+
+            const continueToNext = () => {
+                setShowContinue(false);
+                setShowAnimation(false);
+                setFeedback('');
+                setUserAnswers([]);
+                
+                if (currentQuestion < sentences.length - 1) {
+                    setCurrentQuestion(currentQuestion + 1);
+                } else {
+                    if (!badges.includes('Intermédiaire')) {
+                        setBadges([...badges, 'Intermédiaire']);
+                    }
+                    setIsComplete(true);
+                }
+            };
+
+            const resetExercise = () => {
+                setCurrentQuestion(0);
+                setUserAnswers([]);
+                setFeedback('');
+                setScore(0);
+                setErrors(0);
+                setShowContinue(false);
+                setShowAnimation(false);
+                setIsComplete(false);
+            };
+
+            if (isComplete) {
+                const successRate = (score / sentences.length) * 100;
+                const canProgress = successRate >= 80;
+
+                return (
+                    <div className="text-center space-y-6">
+                        <div className="text-6xl mb-4">🎉</div>
+                        <h2 className="text-4xl font-bold text-gray-800">Bravo !</h2>
+                        <p className="text-2xl text-gray-600">Jeu 2 terminé !</p>
+                        <div className="text-5xl font-bold text-purple-600">{score}/{sentences.length}</div>
+                        <div className="text-3xl font-bold text-purple-600">{successRate.toFixed(0)}%</div>
+                        
+                        <div className="bg-gray-100 p-4 rounded-lg">
+                            <p className="text-xl text-gray-700">
+                                Nombre d'erreurs : <span className={`font-bold ${errors > 0 ? 'text-red-600' : 'text-green-600'}`}>{errors}</span>
+                            </p>
+                        </div>
+
+                        {!canProgress ? (
+                            <div className="space-y-4">
+                                <p className="text-lg text-red-600 font-bold">
+                                    Tu dois obtenir au moins 80% de bonnes réponses pour débloquer le jeu suivant.
+                                </p>
+                                <p className="text-lg text-gray-600">
+                                    Refais le jeu pour améliorer ton score !
+                                </p>
+                                <button onClick={resetExercise} className="px-8 py-4 bg-purple-500 text-white text-xl font-bold rounded-lg hover:bg-purple-600 transition flex items-center gap-2 mx-auto">
+                                    <RotateCcw size={24} /> Refaire le jeu
+                                </button>
+                            </div>
+                        ) : errors > 0 ? (
+                            <div className="space-y-4">
+                                <p className="text-lg text-gray-600">
+                                    Tu peux t'améliorer ! Refais le jeu pour obtenir un meilleur score.
+                                </p>
+                                <button onClick={resetExercise} className="px-8 py-4 bg-purple-500 text-white text-xl font-bold rounded-lg hover:bg-purple-600 transition flex items-center gap-2 mx-auto">
+                                    <RotateCcw size={24} /> Refaire le jeu
+                                </button>
+                                <button onClick={() => { onGameComplete(2, canProgress); onComplete(3); }} className="px-8 py-4 bg-green-500 text-white text-xl font-bold rounded-lg hover:bg-green-600 transition">
+                                    Passer au jeu 3 →
+                                </button>
+                            </div>
+                        ) : (
+                            <button onClick={() => { onGameComplete(2, canProgress); onComplete(3); }} className="px-8 py-4 bg-green-500 text-white text-xl font-bold rounded-lg hover:bg-green-600 transition">
+                                Passer au jeu 3 →
+                            </button>
+                        )}
+                    </div>
+                );
+            }
+
+            const current = sentences[currentQuestion];
+            const parts = current.text.split('___');
+
+            return (
+                <div className="space-y-6">
+                    <div className="text-center">
+                        <p className="text-lg font-semibold text-gray-700">Question {currentQuestion + 1}/{sentences.length}</p>
+                    </div>
+
+                    <div className="bg-purple-50 p-6 rounded-lg text-center">
+                        <p className="text-2xl text-gray-800">
+                            {parts[0]}
+                            {userAnswers[0] ? <span className="text-purple-600 font-bold">{userAnswers[0]}</span> : <span className="text-purple-400">___</span>}
+                            {parts[1]}
+                            {parts[2] && (
+                                <>
+                                    {userAnswers[1] ? <span className="text-purple-600 font-bold">{userAnswers[1]}</span> : <span className="text-purple-400">___</span>}
+                                    {parts[2]}
+                                </>
+                            )}
+                        </p>
+                    </div>
+
+                    {!showContinue && (
+                        <div className="grid grid-cols-2 gap-4">
+                            {current.options.map((option) => (
+                                <button key={option} onClick={() => handleAnswer(option)} disabled={feedback === 'incorrect'} className="px-6 py-4 bg-purple-500 text-white text-xl rounded-lg hover:bg-purple-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition">
+                                    {option}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {showContinue && (
+                        <div className="text-center space-y-4 relative">
+                            {showAnimation && (
+                                <div className="absolute -top-20 left-1/2 transform -translate-x-1/2">
+                                    <div className="text-7xl animate-bounce">✨</div>
+                                </div>
+                            )}
+                            <div className="text-6xl mb-2">⭐</div>
+                            <div className="text-green-600 font-bold text-2xl">✓ Bravo ! +15 points</div>
+                            <div className="bg-gradient-to-r from-yellow-400 to-orange-400 rounded-lg p-4 inline-block">
+                                <p className="text-white font-bold text-3xl">{totalPoints} points</p>
+                            </div>
+                            <button onClick={continueToNext} className="px-8 py-4 bg-purple-500 text-white text-xl font-bold rounded-lg hover:bg-purple-600 transition">
+                                Continuer →
+                            </button>
+                        </div>
+                    )}
+
+                    {feedback === 'incorrect' && (
+                        <div className="text-center text-red-600 font-bold text-xl">✗ Réessaie !</div>
+                    )}
+                </div>
+            );
+        };
+
+        // Jeu 3
+        const Exercise3 = ({ totalPoints, setTotalPoints, onComplete, badges, setBadges, onGameComplete }) => {
+            const sentences = [
+                { text: 'Je suis content ___ travailler avec toi.', answer: 'de' },
+                { text: 'Il commence ___ pleuvoir.', answer: 'à' },
+                { text: 'J\'ai envie ___ dormir.', answer: 'de' },
+                { text: 'C\'est facile ___ faire.', answer: 'à' },
+                { text: 'Il est possible ___ visiter ce musée.', answer: 'de' },
+                { text: 'J\'ai besoin ___ repos.', answer: 'de' },
+                { text: 'C\'est difficile ___ comprendre.', answer: 'à' },
+                { text: 'Je suis prêt ___ partir.', answer: 'à' },
+                { text: 'J\'ai le temps ___ réfléchir.', answer: 'de' },
+                { text: 'Elle apprend ___ conduire.', answer: 'à' },
+                { text: 'Il est temps ___ se préparer.', answer: 'de' },
+                { text: 'Je refuse ___ mentir.', answer: 'de' },
+                { text: 'Je suis content ___ vous rencontrer.', answer: 'de' },
+                { text: 'L\'emplacement ___ l\'hôtel est très bon.', answer: 'de' }
+            ];
+
+            const [currentQuestion, setCurrentQuestion] = useState(0);
+            const [userAnswer, setUserAnswer] = useState('');
+            const [feedback, setFeedback] = useState('');
+            const [score, setScore] = useState(0);
+            const [errors, setErrors] = useState(0);
+            const [showContinue, setShowContinue] = useState(false);
+            const [showAnimation, setShowAnimation] = useState(false);
+            const [isComplete, setIsComplete] = useState(false);
+            const inputRef = useRef(null);
+
+            useEffect(() => {
+                if (inputRef.current && !showContinue) {
+                    inputRef.current.focus();
+                }
+            }, [currentQuestion, showContinue]);
+
+            useEffect(() => {
+                const handleKeyPress = (e) => {
+                    if (e.key === 'Enter' && showContinue) {
+                        continueToNext();
+                    }
+                };
+                window.addEventListener('keypress', handleKeyPress);
+                return () => window.removeEventListener('keypress', handleKeyPress);
+            }, [showContinue]);
+
+            const handleSubmit = () => {
+                const current = sentences[currentQuestion];
+                const isCorrect = userAnswer.trim().toLowerCase() === current.answer;
+
+                if (isCorrect) {
+                    setFeedback('correct');
+                    setScore(score + 1);
+                    setTotalPoints(totalPoints + 15);
+                    setShowAnimation(true);
+                    setShowContinue(true);
+                } else {
+                    setFeedback('incorrect');
+                    setErrors(errors + 1);
+                    setUserAnswer('');
+                    setTimeout(() => {
+                        setFeedback('');
+                        if (inputRef.current) inputRef.current.focus();
+                    }, 1500);
+                }
+            };
+
+            const continueToNext = () => {
+                setShowContinue(false);
+                setShowAnimation(false);
+                setFeedback('');
+                setUserAnswer('');
+
+                if (currentQuestion < sentences.length - 1) {
+                    setCurrentQuestion(currentQuestion + 1);
+                } else {
+                    if (!badges.includes('Avancé')) {
+                        setBadges([...badges, 'Avancé']);
+                    }
+                    setIsComplete(true);
+                }
+            };
+
+            const resetExercise = () => {
+                setCurrentQuestion(0);
+                setUserAnswer('');
+                setFeedback('');
+                setScore(0);
+                setErrors(0);
+                setShowContinue(false);
+                setShowAnimation(false);
+                setIsComplete(false);
+            };
+
+            if (isComplete) {
+                const successRate = (score / sentences.length) * 100;
+                const canProgress = successRate >= 80;
+
+                return (
+                    <div className="text-center space-y-6">
+                        <div className="text-6xl mb-4">🏆</div>
+                        <h2 className="text-4xl font-bold text-gray-800">Bravo !</h2>
+                        <p className="text-2xl text-gray-600">Jeu 3 terminé !</p>
+                        <div className="text-5xl font-bold text-green-600">{score}/{sentences.length}</div>
+                        <div className="text-3xl font-bold text-green-600">{successRate.toFixed(0)}%</div>
+                        
+                        <div className="bg-gray-100 p-4 rounded-lg">
+                            <p className="text-xl text-gray-700">
+                                Nombre d'erreurs : <span className={`font-bold ${errors > 0 ? 'text-red-600' : 'text-green-600'}`}>{errors}</span>
+                            </p>
+                        </div>
+
+                        {!canProgress ? (
+                            <div className="space-y-4">
+                                <p className="text-lg text-red-600 font-bold">
+                                    Tu dois obtenir au moins 80% de bonnes réponses pour débloquer le jeu suivant.
+                                </p>
+                                <p className="text-lg text-gray-600">
+                                    Refais le jeu pour améliorer ton score !
+                                </p>
+                                <button onClick={resetExercise} className="px-8 py-4 bg-green-500 text-white text-xl font-bold rounded-lg hover:bg-green-600 transition flex items-center gap-2 mx-auto">
+                                    <RotateCcw size={24} /> Refaire le jeu
+                                </button>
+                            </div>
+                        ) : errors > 0 ? (
+                            <div className="space-y-4">
+                                <p className="text-lg text-gray-600">
+                                    Tu peux t'améliorer ! Refais le jeu pour obtenir un meilleur score.
+                                </p>
+                                <button onClick={resetExercise} className="px-8 py-4 bg-green-500 text-white text-xl font-bold rounded-lg hover:bg-green-600 transition flex items-center gap-2 mx-auto">
+                                    <RotateCcw size={24} /> Refaire le jeu
+                                </button>
+                                <button onClick={() => { onGameComplete(3, canProgress); onComplete(4); }} className="px-8 py-4 bg-blue-500 text-white text-xl font-bold rounded-lg hover:bg-blue-600 transition">
+                                    Passer au jeu 4 →
+                                </button>
+                            </div>
+                        ) : (
+                            <button onClick={() => { onGameComplete(3, canProgress); onComplete(4); }} className="px-8 py-4 bg-blue-500 text-white text-xl font-bold rounded-lg hover:bg-blue-600 transition">
+                                Passer au jeu 4 →
+                            </button>
+                        )}
+                    </div>
+                );
+            }
+
+            const current = sentences[currentQuestion];
+            const parts = current.text.split('___');
+
+            return (
+                <div className="space-y-6">
+                    <div className="text-center">
+                        <p className="text-lg font-semibold text-gray-700">Question {currentQuestion + 1}/{sentences.length}</p>
+                        <p className="text-sm text-gray-500 mt-2">Complétez par "de" ou "à"</p>
+                    </div>
+
+                    <div className="bg-green-50 p-6 rounded-lg text-center">
+                        <div className="text-2xl text-gray-800 inline-flex items-center justify-center flex-wrap gap-2">
+                            <span>{parts[0]}</span>
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                value={userAnswer}
+                                onChange={(e) => setUserAnswer(e.target.value)}
+                                onKeyPress={(e) => {
+                                    if (e.key === 'Enter' && userAnswer.trim()) {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleSubmit();
+                                    }
+                                }}
+                                disabled={showContinue}
+                                className="border-0 border-b-2 border-green-500 bg-transparent focus:outline-none focus:border-green-700 text-center font-semibold text-green-600 disabled:border-gray-400"
+                                style={{ width: '80px' }}
+                                placeholder="___"
+                            />
+                            <span>{parts[1]}</span>
+                        </div>
+                    </div>
+
+                    {!showContinue && (
+                        <div className="text-center">
+                            <button onClick={handleSubmit} disabled={!userAnswer.trim()} className="px-8 py-3 bg-green-500 text-white text-xl font-bold rounded-lg hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition">
+                                Vérifier
+                            </button>
+                        </div>
+                    )}
+
+                    {showContinue && (
+                        <div className="text-center space-y-4 relative">
+                            {showAnimation && (
+                                <div className="absolute -top-20 left-1/2 transform -translate-x-1/2">
+                                    <div className="text-7xl animate-spin" style={{ animationDuration: '2s' }}>🌟</div>
+                                </div>
+                            )}
+                            <div className="text-6xl mb-2">🎯</div>
+                            <div className="text-green-600 font-bold text-2xl">✓ Excellent ! +15 points</div>
+                            <div className="bg-gradient-to-r from-yellow-400 to-orange-400 rounded-lg p-4 inline-block">
+                                <p className="text-white font-bold text-3xl">{totalPoints} points</p>
+                            </div>
+                            <button onClick={continueToNext} className="px-8 py-4 bg-green-500 text-white text-xl font-bold rounded-lg hover:bg-green-600 transition">
+                                Continuer →
+                            </button>
+                        </div>
+                    )}
+
+                    {feedback === 'incorrect' && (
+                        <div className="text-center text-red-600 font-bold text-xl">✗ Réessaie !</div>
+                    )}
+                </div>
+            );
+        };
+
+        // Page explicative pour jeu 4
+        const ExplanationPages = ({ onStart }) => {
+            const [currentPage, setCurrentPage] = useState(1);
+
+            return (
+                <div className="space-y-6">
+                    {currentPage === 1 && (
+                        <div className="space-y-6">
+                            <div className="text-center">
+                                <h2 className="text-3xl font-bold text-gray-800 mb-4">
+                                    📚 Règle importante : C'EST ou IL EST avec FACILE/DIFFICILE ?
+                                </h2>
+                            </div>
+
+                            <div className="bg-blue-50 p-6 rounded-lg space-y-4">
+                                <h3 className="text-2xl font-bold text-blue-800">
+                                    C'est + facile/difficile + À + verbe (sans complément)
+                                </h3>
+                                <div className="space-y-2 text-lg">
+                                    <p className="text-gray-700"><strong>Exemples :</strong></p>
+                                    <p>• C'est facile <span className="text-blue-600 font-bold">à</span> faire.</p>
+                                    <p>• C'est difficile <span className="text-blue-600 font-bold">à</span> comprendre.</p>
+                                    <p>• C'est facile <span className="text-blue-600 font-bold">à</span> apprendre.</p>
+                                    <p>• C'est difficile <span className="text-blue-600 font-bold">à</span> expliquer.</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-green-50 p-6 rounded-lg space-y-4">
+                                <h3 className="text-2xl font-bold text-green-800">
+                                    Il est + facile/difficile + DE + verbe + complément
+                                </h3>
+                                <div className="space-y-2 text-lg">
+                                    <p className="text-gray-700"><strong>Exemples :</strong></p>
+                                    <p>• Il est facile <span className="text-green-600 font-bold">de</span> faire cet exercice.</p>
+                                    <p>• Il est difficile <span className="text-green-600 font-bold">de</span> comprendre cette règle.</p>
+                                    <p>• Il est facile <span className="text-green-600 font-bold">d'</span>apprendre le français.</p>
+                                    <p>• Il est difficile <span className="text-green-600 font-bold">d'</span>expliquer cette situation.</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-yellow-50 p-6 rounded-lg">
+                                <p className="text-xl font-semibold text-gray-800 mb-2">💡 Astuce :</p>
+                                <p className="text-lg">• Si tu n'ajoutes rien après le verbe → <span className="font-bold text-blue-600">C'est facile/difficile à</span></p>
+                                <p className="text-lg">• Si tu ajoutes un complément après le verbe → <span className="font-bold text-green-600">Il est facile/difficile de</span></p>
+                            </div>
+
+                            <div className="flex justify-center">
+                                <button
+                                    onClick={() => setCurrentPage(2)}
+                                    className="px-8 py-4 bg-blue-500 text-white text-xl font-bold rounded-lg hover:bg-blue-600 transition"
+                                >
+                                    Page suivante →
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {currentPage === 2 && (
+                        <div className="space-y-6">
+                            <div className="text-center">
+                                <h2 className="text-3xl font-bold text-gray-800 mb-4">
+                                    📚 Généralisation : C'EST ou IL EST ?
+                                </h2>
+                                <p className="text-lg text-gray-600">
+                                    La même règle s'applique avec d'autres adjectifs comme : <span className="font-bold">simple, compliqué, agréable, important, nécessaire, possible, impossible</span>...
+                                </p>
+                            </div>
+
+                            <div className="bg-purple-50 p-6 rounded-lg space-y-4">
+                                <h3 className="text-2xl font-bold text-purple-800">
+                                    C'est + adjectif + À + verbe (sans complément)
+                                </h3>
+                                <div className="space-y-2 text-lg">
+                                    <p className="text-gray-700"><strong>Exemples :</strong></p>
+                                    <p>• C'est simple <span className="text-purple-600 font-bold">à</span> utiliser.</p>
+                                    <p>• C'est agréable <span className="text-purple-600 font-bold">à</span> regarder.</p>
+                                    <p>• C'est important <span className="text-purple-600 font-bold">à</span> savoir.</p>
+                                    <p>• C'est compliqué <span className="text-purple-600 font-bold">à</span> résoudre.</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-orange-50 p-6 rounded-lg space-y-4">
+                                <h3 className="text-2xl font-bold text-orange-800">
+                                    Il est + adjectif + DE + verbe + complément
+                                </h3>
+                                <div className="space-y-2 text-lg">
+                                    <p className="text-gray-700"><strong>Exemples :</strong></p>
+                                    <p>• Il est simple <span className="text-orange-600 font-bold">d'</span>utiliser cette application.</p>
+                                    <p>• Il est agréable <span className="text-orange-600 font-bold">de</span> regarder ce film.</p>
+                                    <p>• Il est important <span className="text-orange-600 font-bold">de</span> savoir cette règle.</p>
+                                    <p>• Il est compliqué <span className="text-orange-600 font-bold">de</span> résoudre ce problème.</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-yellow-50 p-6 rounded-lg">
+                                <p className="text-xl font-semibold text-gray-800 mb-2">🎯 En résumé :</p>
+                                <p className="text-lg">• <span className="font-bold text-purple-600">C'est + adjectif + à + verbe seul</span></p>
+                                <p className="text-lg">• <span className="font-bold text-orange-600">Il est + adjectif + de + verbe + complément</span></p>
+                            </div>
+
+                            <div className="flex justify-center gap-4">
+                                <button
+                                    onClick={() => setCurrentPage(1)}
+                                    className="px-8 py-4 bg-gray-500 text-white text-xl font-bold rounded-lg hover:bg-gray-600 transition"
+                                >
+                                    ← Page précédente
+                                </button>
+                                <button
+                                    onClick={onStart}
+                                    className="px-8 py-4 bg-green-500 text-white text-xl font-bold rounded-lg hover:bg-green-600 transition"
+                                >
+                                    Commencer le jeu 4 ! 🚀
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // Jeu 4
+        const Exercise4 = ({ totalPoints, setTotalPoints, badges, setBadges, onFinalComplete, onGameComplete }) => {
+            const sentences = [
+                { text: 'Je suis ravi ___ te rencontrer.', answer: 'de' },
+                { text: 'C\'est difficile ___ comprendre.', answer: 'à' },
+                { text: 'Il va ___ marché tous les jours.', answer: 'au' },
+                { text: 'J\'ai peur ___ oublier.', answer: 'd\'' },
+                { text: 'Elle habite ___ campagne.', answer: 'à la' },
+                { text: 'Le début ___ film est lent.', answer: 'du' },
+                { text: 'Il est facile ___ se perdre dans cette ville.', answer: 'de' },
+                { text: 'J\'ai besoin ___ aide.', answer: 'd\'' },
+                { text: 'C\'est l\'heure ___ partir.', answer: 'de' },
+                { text: 'Je vais ___ piscine cet après-midi.', answer: 'à la' },
+                { text: 'C\'est facile ___ faire.', answer: 'à' },
+                { text: 'L\'entrée ___ musée coûte 10 euros.', answer: 'du' },
+                { text: 'J\'ai décidé ___ rester chez moi.', answer: 'de' },
+                { text: 'Il est difficile ___ trouver un bon restaurant ici.', answer: 'de' }
+            ];
+
+            const [currentQuestion, setCurrentQuestion] = useState(0);
+            const [userAnswer, setUserAnswer] = useState('');
+            const [feedback, setFeedback] = useState('');
+            const [score, setScore] = useState(0);
+            const [errors, setErrors] = useState(0);
+            const [showContinue, setShowContinue] = useState(false);
+            const [showAnimation, setShowAnimation] = useState(false);
+            const [isComplete, setIsComplete] = useState(false);
+            const inputRef = useRef(null);
+
+            const [showExplanation, setShowExplanation] = useState(true);
+
+            useEffect(() => {
+                if (inputRef.current && !showContinue) {
+                    inputRef.current.focus();
+                }
+            }, [currentQuestion, showContinue]);
+
+            useEffect(() => {
+                const handleKeyPress = (e) => {
+                    if (e.key === 'Enter' && showContinue) {
+                        continueToNext();
+                    }
+                };
+                window.addEventListener('keypress', handleKeyPress);
+                return () => window.removeEventListener('keypress', handleKeyPress);
+            }, [showContinue]);
+
+            // Si on doit montrer l'explication
+            if (showExplanation) {
+                return <ExplanationPages onStart={() => setShowExplanation(false)} />;
+            }
+
+            const handleSubmit = () => {
+                const current = sentences[currentQuestion];
+                const isCorrect = userAnswer.trim().toLowerCase() === current.answer.toLowerCase();
+
+                if (isCorrect) {
+                    setFeedback('correct');
+                    setScore(score + 1);
+                    setTotalPoints(totalPoints + 20);
+                    setShowAnimation(true);
+                    setShowContinue(true);
+                } else {
+                    setFeedback('incorrect');
+                    setErrors(errors + 1);
+                    setUserAnswer('');
+                    setTimeout(() => {
+                        setFeedback('');
+                        if (inputRef.current) inputRef.current.focus();
+                    }, 1500);
+                }
+            };
+
+            const continueToNext = () => {
+                setShowContinue(false);
+                setShowAnimation(false);
+                setFeedback('');
+                setUserAnswer('');
+
+                if (currentQuestion < sentences.length - 1) {
+                    setCurrentQuestion(currentQuestion + 1);
+                } else {
+                    if (!badges.includes('Expert')) {
+                        setBadges([...badges, 'Expert']);
+                    }
+                    if (!badges.includes('Champion !')) {
+                        setBadges([...badges, 'Champion !']);
+                    }
+                    setIsComplete(true);
+                }
+            };
+
+            const resetExercise = () => {
+                setCurrentQuestion(0);
+                setUserAnswer('');
+                setFeedback('');
+                setScore(0);
+                setErrors(0);
+                setShowContinue(false);
+                setShowAnimation(false);
+                setIsComplete(false);
+            };
+
+            if (isComplete) {
+                const successRate = (score / sentences.length) * 100;
+
+                if (errors === 0) {
+                    onGameComplete(4, true);
+                    onFinalComplete();
+                    return null;
+                }
+                
+                return (
+                    <div className="text-center space-y-6">
+                        <div className="text-6xl mb-4">🏆</div>
+                        <h2 className="text-4xl font-bold text-gray-800">Jeu 4 terminé !</h2>
+                        <p className="text-2xl text-gray-600">Tu peux faire mieux !</p>
+                        <div className="text-5xl font-bold text-blue-600">{score}/{sentences.length}</div>
+                        <div className="text-3xl font-bold text-blue-600">{successRate.toFixed(0)}%</div>
+                        
+                        <div className="bg-gray-100 p-4 rounded-lg">
+                            <p className="text-xl text-gray-700">
+                                Nombre d'erreurs : <span className="font-bold text-red-600">{errors}</span>
+                            </p>
+                        </div>
+
+                        <div className="space-y-4">
+                            <p className="text-lg text-gray-600">
+                                Tu peux t'améliorer ! Refais le jeu pour obtenir un meilleur score.
+                            </p>
+                            <button onClick={resetExercise} className="px-8 py-4 bg-blue-500 text-white text-xl font-bold rounded-lg hover:bg-blue-600 transition flex items-center gap-2 mx-auto">
+                                <RotateCcw size={24} /> Refaire le jeu
+                            </button>
+                            {successRate >= 80 && (
+                                <button onClick={() => { onGameComplete(4, true); onFinalComplete(); }} className="px-8 py-4 bg-green-500 text-white text-xl font-bold rounded-lg hover:bg-green-600 transition">
+                                    Voir le score final →
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                );
+            }
+
+            const current = sentences[currentQuestion];
+            const parts = current.text.split('___');
+
+            return (
+                <div className="space-y-6">
+                    <div className="text-center">
+                        <p className="text-lg font-semibold text-gray-700">Question {currentQuestion + 1}/{sentences.length}</p>
+                        <p className="text-sm text-gray-500 mt-2">Complétez par : de, d', à, au, à la ou du</p>
+                    </div>
+
+                    <div className="bg-blue-50 p-6 rounded-lg text-center">
+                        <div className="text-2xl text-gray-800 inline-flex items-center justify-center flex-wrap gap-2">
+                            <span>{parts[0]}</span>
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                value={userAnswer}
+                                onChange={(e) => setUserAnswer(e.target.value)}
+                                onKeyPress={(e) => {
+                                    if (e.key === 'Enter' && userAnswer.trim()) {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleSubmit();
+                                    }
+                                }}
+                                disabled={showContinue}
+                                className="border-0 border-b-2 border-blue-500 bg-transparent focus:outline-none focus:border-blue-700 text-center font-semibold text-blue-600 disabled:border-gray-400"
+                                style={{ width: '100px' }}
+                                placeholder="___"
+                            />
+                            <span>{parts[1]}</span>
+                        </div>
+                    </div>
+
+                    {!showContinue && (
+                        <div className="text-center">
+                            <button onClick={handleSubmit} disabled={!userAnswer.trim()} className="px-8 py-3 bg-blue-500 text-white text-xl font-bold rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition">
+                                Vérifier
+                            </button>
+                        </div>
+                    )}
+
+                    {showContinue && (
+                        <div className="text-center space-y-4 relative">
+                            {showAnimation && (
+                                <div className="absolute -top-20 left-1/2 transform -translate-x-1/2">
+                                    <div className="text-7xl animate-pulse">💫</div>
+                                </div>
+                            )}
+                            <div className="text-6xl mb-2">🏆</div>
+                            <div className="text-green-600 font-bold text-2xl">✓ Parfait ! +20 points</div>
+                            <div className="bg-gradient-to-r from-yellow-400 to-orange-400 rounded-lg p-4 inline-block">
+                                <p className="text-white font-bold text-3xl">{totalPoints} points</p>
+                            </div>
+                            <button onClick={continueToNext} className="px-8 py-4 bg-blue-500 text-white text-xl font-bold rounded-lg hover:bg-blue-600 transition">
+                                Continuer →
+                            </button>
+                        </div>
+                    )}
+
+                    {feedback === 'incorrect' && (
+                        <div className="text-center text-red-600 font-bold text-xl">✗ Réessaie !</div>
+                    )}
+                </div>
+            );
+        };
+
+        // Composant principal
+        const FLECompleteGame = () => {
+            const [currentExercise, setCurrentExercise] = useState(1);
+            const [totalPoints, setTotalPoints] = useState(0);
+            const [badges, setBadges] = useState([]);
+            const [allComplete, setAllComplete] = useState(false);
+            const [unlockedGames, setUnlockedGames] = useState([true, false, false, false]);
+            const [adminMode, setAdminMode] = useState(false);
+
+            const handleGameComplete = (gameNumber, success) => {
+                const newUnlocked = [...unlockedGames];
+                if (success && gameNumber < 4) {
+                    newUnlocked[gameNumber] = true;
+                }
+                setUnlockedGames(newUnlocked);
+            };
+
+            const handleGameClick = (gameNumber) => {
+                if (adminMode || unlockedGames[gameNumber - 1]) {
+                    setCurrentExercise(gameNumber);
+                } else {
+                    const code = prompt('Ce jeu est verrouillé. Entre le code pour le débloquer :');
+                    if (code === 'admin') {
+                        setAdminMode(true);
+                        setUnlockedGames([true, true, true, true]);
+                        setCurrentExercise(gameNumber);
+                    } else if (code !== null) {
+                        alert('Code incorrect !');
+                    }
+                }
+            };
+
+            if (allComplete) {
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 p-8 flex items-center justify-center">
+                        <div className="bg-white rounded-2xl shadow-2xl p-12 text-center max-w-3xl">
+                            <div className="text-8xl mb-6">🎉🏆🎊</div>
+                            <h1 className="text-5xl font-bold text-gray-800 mb-4">FÉLICITATIONS !</h1>
+                            <p className="text-3xl text-gray-600 mb-6">Tu as terminé tous les jeux avec succès !</p>
+                            
+                            <div className="bg-gradient-to-r from-yellow-400 to-orange-400 rounded-2xl p-8 mb-6">
+                                <p className="text-white text-2xl font-semibold mb-2">Score Total</p>
+                                <p className="text-white text-7xl font-bold">{totalPoints}</p>
+                                <p className="text-white text-2xl font-semibold mt-2">points</p>
+                            </div>
+
+                            <div className="flex gap-3 justify-center flex-wrap mb-6">
+                                {badges.map((badge, index) => (
+                                    <div key={index} className="bg-gradient-to-r from-orange-400 to-red-400 px-6 py-3 rounded-full text-lg font-bold text-white flex items-center gap-2 shadow-lg">
+                                        <Trophy size={24} /> {badge}
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="text-6xl mb-4">🌟⭐✨💫🎯</div>
+                            
+                            <p className="text-xl text-gray-600 mb-6">Tu maîtrises maintenant les prépositions DE et À !</p>
+
+                            <button
+                                onClick={() => {
+                                    setAllComplete(false);
+                                    setCurrentExercise(1);
+                                    setTotalPoints(0);
+                                    setBadges([]);
+                                    setUnlockedGames([true, false, false, false]);
+                                    setAdminMode(false);
+                                }}
+                                className="px-10 py-4 bg-blue-500 text-white text-xl font-bold rounded-lg hover:bg-blue-600 transition"
+                            >
+                                Recommencer depuis le début
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 p-8">
+                    <div className="max-w-4xl mx-auto">
+                        <div className="bg-white rounded-2xl shadow-2xl p-8">
+                            <div className="text-center mb-8">
+                                <h1 className="text-4xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-2">
+                                    <Sparkles />
+                                    Les prépositions DE et À
+                                    <Sparkles />
+                                </h1>
+                                <p className="text-gray-600">Apprends en t'amusant !</p>
+                            </div>
+
+                            <div className="bg-gradient-to-r from-yellow-400 to-orange-400 rounded-lg p-4 mb-6 flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <Star />
+                                    <div>
+                                        <p className="text-white font-bold text-2xl">{totalPoints} points</p>
+                                        <p className="text-white text-sm">Score total</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2 flex-wrap justify-end">
+                                    {badges.map((badge, index) => (
+                                        <div key={index} className="bg-white px-3 py-1 rounded-full text-sm font-semibold text-orange-600 flex items-center gap-1">
+                                            <Trophy size={16} /> {badge}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="mb-6">
+                                <div className="flex justify-center gap-2 mb-4 flex-wrap">
+                                    {[1, 2, 3, 4].map((ex) => (
+                                        <button
+                                            key={ex}
+                                            onClick={() => handleGameClick(ex)}
+                                            className={`px-6 py-2 rounded-lg font-semibold transition flex items-center gap-2 ${
+                                                currentExercise === ex
+                                                    ? 'bg-blue-500 text-white'
+                                                    : (adminMode || unlockedGames[ex - 1])
+                                                        ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                            }`}
+                                        >
+                                            {(!adminMode && !unlockedGames[ex - 1]) && <Lock />}
+                                            Jeu {ex}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="bg-gray-200 h-2 rounded-full">
+                                    <div className="bg-blue-500 h-2 rounded-full transition-all duration-500" style={{ width: `${(currentExercise / 4) * 100}%` }}></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                {currentExercise === 1 && <Exercise1 totalPoints={totalPoints} setTotalPoints={setTotalPoints} onComplete={setCurrentExercise} badges={badges} setBadges={setBadges} onGameComplete={handleGameComplete} />}
+                                {currentExercise === 2 && <Exercise2 totalPoints={totalPoints} setTotalPoints={setTotalPoints} onComplete={setCurrentExercise} badges={badges} setBadges={setBadges} onGameComplete={handleGameComplete} />}
+                                {currentExercise === 3 && <Exercise3 totalPoints={totalPoints} setTotalPoints={setTotalPoints} onComplete={setCurrentExercise} badges={badges} setBadges={setBadges} onGameComplete={handleGameComplete} />}
+                                {currentExercise === 4 && <Exercise4 totalPoints={totalPoints} setTotalPoints={setTotalPoints} badges={badges} setBadges={setBadges} onFinalComplete={() => setAllComplete(true)} onGameComplete={handleGameComplete} />}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Rendu
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<FLECompleteGame />);
+    </script>
+</body>
+</html>
+
